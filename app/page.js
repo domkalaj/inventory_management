@@ -2,6 +2,11 @@
 import { useState, useEffect } from "react";
 import { firestore } from "@/firebase";
 
+//calendar stuff
+import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import dayjs from "dayjs";
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'; // Import AdapterDayjs
+
 
 import {
   Box,
@@ -30,11 +35,11 @@ import {
 
 // Spotify Color inspired Palette
 const sColors = {
-  background: "#121212",
-  primary: "#1DB954",
-  textPrimary: "#FFFFFF",
-  textSecondary: "#B3B3B3",
-  cardBackground: "#181818",
+  background: "#121212", //dark grey
+  primary: "#1DB954", //green
+  textPrimary: "#FFFFFF", //pure white
+  textSecondary: "#B3B3B3", //light grey
+  cardBackground: "#181818", //dark grey #2
 };
 
 const InventoryItem = ({
@@ -71,7 +76,6 @@ const InventoryItem = ({
         style={{ color: sColors.primary }}
         onClick={() => onRemove(name)}
       >
-        {" "}
         -
       </IconButton>
       <Typography variant="h6" style={{ color: sColors.textPrimary }}>
@@ -107,6 +111,7 @@ export default function Home() {
   const [quantity, setQuantity] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [itemExpoeration, setItemExpoeration] = useState("");
+  const [selectedDate, setSelectedDate] = useState(dayjs());
 
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, "inventory"));
@@ -202,6 +207,7 @@ export default function Home() {
             style: { backgroundColor: "white" },
           }}
         />
+
         <Box
           display="flex"
           justifyContent="center"
@@ -277,6 +283,18 @@ export default function Home() {
                   }}
                   InputProps={{ style: { color: sColors.textPrimary } }}
                 />
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker
+                    label="Select Date"
+                    value={selectedDate}
+                    onChange={(newValue) => setSelectedDate(newValue)}
+                    renderInput={(params) => <TextField {...params} />}
+                    style={{
+                      backgroundColor: sColors.primary,
+                      color: sColors.textPrimary,
+                    }}
+                  />
+                </LocalizationProvider>
                 <Button
                   variant="contained"
                   style={{
