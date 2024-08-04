@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { firestore } from "@/firebase";
+
+
 import {
   Box,
   Modal,
@@ -16,11 +18,6 @@ import {
   Toolbar,
   Container,
 } from "@mui/material";
-// import {
-//   Add as AddIcon,
-//   Remove as RemoveIcon,
-//   Delete as DeleteIcon,
-// } from "@mui/icons-material";
 import {
   collection,
   deleteDoc,
@@ -31,8 +28,8 @@ import {
   getDocs,
 } from "firebase/firestore";
 
-// Spotify Color Palette
-const spotifyColors = {
+// Spotify Color inspired Palette
+const sColors = {
   background: "#121212",
   primary: "#1DB954",
   textPrimary: "#FFFFFF",
@@ -54,7 +51,7 @@ const InventoryItem = ({
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
-      backgroundColor: spotifyColors.cardBackground,
+      backgroundColor: sColors.cardBackground,
       padding: "16px",
       borderRadius: "8px",
       boxShadow: "0 2px 4px rgba(0,0,0,0.5)",
@@ -62,35 +59,32 @@ const InventoryItem = ({
     }}
   >
     <Stack spacing={1}>
-      <Typography variant="h6" style={{ color: spotifyColors.textPrimary }}>
+      <Typography variant="h6" style={{ color: sColors.textPrimary }}>
         {name.charAt(0).toUpperCase() + name.slice(1)}
       </Typography>
-      <Typography
-        variant="body2"
-        style={{ color: spotifyColors.textSecondary }}
-      >
+      <Typography variant="body2" style={{ color: sColors.textSecondary }}>
         {description}
       </Typography>
     </Stack>
     <Stack direction="row" alignItems="center" spacing={1}>
       <IconButton
-        style={{ color: spotifyColors.primary }}
+        style={{ color: sColors.primary }}
         onClick={() => onRemove(name)}
       >
         {" "}
         -
       </IconButton>
-      <Typography variant="h6" style={{ color: spotifyColors.textPrimary }}>
+      <Typography variant="h6" style={{ color: sColors.textPrimary }}>
         {quantity}
       </Typography>
       <IconButton
-        style={{ color: spotifyColors.primary }}
+        style={{ color: sColors.primary }}
         onClick={() => onIncrease(name)}
       >
         +
       </IconButton>
       <IconButton
-        style={{ color: spotifyColors.primary }}
+        style={{ color: sColors.primary }}
         onClick={() => onDelete(name)}
       >
         <img
@@ -111,6 +105,8 @@ export default function Home() {
   const [itemName, setItemName] = useState("");
   const [itemDescription, setItemDescription] = useState("");
   const [quantity, setQuantity] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [itemExpoeration, setItemExpoeration] = useState("");
 
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, "inventory"));
@@ -183,18 +179,29 @@ export default function Home() {
   const handleClose = () => setOpen(false);
 
   return (
-    <Box width="100vw" height="100vh" bgcolor={spotifyColors.background}>
+    <Box width="100vw" height="100vh" bgcolor={sColors.background}>
       <AppBar
         position="static"
-        style={{ backgroundColor: spotifyColors.cardBackground }}
+        style={{ backgroundColor: sColors.cardBackground }}
       >
         <Toolbar>
-          <Typography variant="h6" style={{ color: spotifyColors.textPrimary }}>
+          <Typography variant="h6" style={{ color: sColors.textPrimary }}>
             Inventory Management
           </Typography>
         </Toolbar>
       </AppBar>
       <Container>
+        <TextField
+          variant="outlined"
+          fullWidth
+          placeholder="Search items..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          aria-label="Search Items"
+          InputProps={{
+            style: { backgroundColor: "white" },
+          }}
+        />
         <Box
           display="flex"
           justifyContent="center"
@@ -206,8 +213,8 @@ export default function Home() {
           <Button
             variant="contained"
             style={{
-              backgroundColor: spotifyColors.primary,
-              color: spotifyColors.textPrimary,
+              backgroundColor: sColors.primary,
+              color: sColors.textPrimary,
             }}
             onClick={handleOpen}
           >
@@ -228,12 +235,9 @@ export default function Home() {
               sx={{ transform: "translate(-50%, -50%)" }}
               bgcolor="background.paper"
               borderRadius={1}
-              style={{ backgroundColor: spotifyColors.cardBackground }}
+              style={{ backgroundColor: sColors.cardBackground }}
             >
-              <Typography
-                variant="h6"
-                style={{ color: spotifyColors.textPrimary }}
-              >
+              <Typography variant="h6" style={{ color: sColors.textPrimary }}>
                 Add Item
               </Typography>
               <Stack direction="column" spacing={2}>
@@ -245,9 +249,9 @@ export default function Home() {
                   aria-label="Item Name"
                   label="Item Name"
                   InputLabelProps={{
-                    style: { color: spotifyColors.textSecondary },
+                    style: { color: sColors.textSecondary },
                   }}
-                  InputProps={{ style: { color: spotifyColors.textPrimary } }}
+                  InputProps={{ style: { color: sColors.textPrimary } }}
                 />
                 <TextField
                   variant="outlined"
@@ -257,9 +261,9 @@ export default function Home() {
                   aria-label="Item Description"
                   label="Item Description"
                   InputLabelProps={{
-                    style: { color: spotifyColors.textSecondary },
+                    style: { color: sColors.textSecondary },
                   }}
-                  InputProps={{ style: { color: spotifyColors.textPrimary } }}
+                  InputProps={{ style: { color: sColors.textPrimary } }}
                 />
                 <TextField
                   variant="outlined"
@@ -269,15 +273,15 @@ export default function Home() {
                   aria-label="Item Quantity"
                   label="Item Quantity"
                   InputLabelProps={{
-                    style: { color: spotifyColors.textSecondary },
+                    style: { color: sColors.textSecondary },
                   }}
-                  InputProps={{ style: { color: spotifyColors.textPrimary } }}
+                  InputProps={{ style: { color: sColors.textPrimary } }}
                 />
                 <Button
                   variant="contained"
                   style={{
-                    backgroundColor: spotifyColors.primary,
-                    color: spotifyColors.textPrimary,
+                    backgroundColor: sColors.primary,
+                    color: sColors.textPrimary,
                   }}
                   onClick={() => {
                     addItem(itemName, itemDescription, quantity);
@@ -298,28 +302,41 @@ export default function Home() {
             width={isSmallScreen ? "90%" : "800px"}
             borderRadius={1}
             boxShadow={3}
-            bgcolor={spotifyColors.cardBackground}
+            bgcolor={sColors.cardBackground}
             padding={3}
             mt={3}
           >
-            <Typography
-              variant="h5"
-              style={{ color: spotifyColors.textPrimary }}
-            >
+            <Typography variant="h5" style={{ color: sColors.textPrimary }}>
               Inventory Items
             </Typography>
-            <Stack width="100%" spacing={2} overflow="auto" padding={2}>
-              {inventory.map(({ name, quantity, description }) => (
-                <InventoryItem
-                  key={name}
-                  name={name}
-                  quantity={quantity}
-                  description={description}
-                  onRemove={removeItem}
-                  onDelete={deleteItem}
-                  onIncrease={increaseItem}
-                />
-              ))}
+            <Stack
+              width="100%"
+              height="300px"
+              spacing={2}
+              overflow="auto"
+              padding={2}
+            >
+              {inventory
+                .filter(
+                  (item) =>
+                    item.name
+                      .toLowerCase()
+                      .includes(searchQuery.toLowerCase()) ||
+                    item.description
+                      .toLowerCase()
+                      .includes(searchQuery.toLowerCase())
+                )
+                .map(({ name, quantity, description }) => (
+                  <InventoryItem
+                    key={name}
+                    name={name}
+                    quantity={quantity}
+                    description={description}
+                    onRemove={removeItem}
+                    onDelete={deleteItem}
+                    onIncrease={increaseItem}
+                  />
+                ))}
             </Stack>
           </Box>
         </Box>
