@@ -1,12 +1,26 @@
 "use client";
-// import Image from "next/image";
 import { useState, useEffect } from "react";
-import { firestore } from "@/firebase";
-import { Box, Modal, Typography } from "@mui/material";
-import { collection, deleteDoc, doc, query, getDocs } from "firebase/firestore";
+import { firestore } from "@/firebase"; // Ensure this is correctly initialized
+import {
+  Box,
+  Modal,
+  Stack,
+  Typography,
+  TextField,
+  Button,
+} from "@mui/material";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  setDoc,
+  query,
+  getDocs,
+} from "firebase/firestore";
 
 export default function Home() {
-  const [inventory, setInvetory] = useState([]);
+  const [inventory, setInventory] = useState([]); // Fixed typo setInvetory
   const [open, setOpen] = useState(false);
   const [itemName, setItemName] = useState("");
 
@@ -20,6 +34,7 @@ export default function Home() {
         ...doc.data(),
       });
     });
+    setInventory(inventoryList); // Update inventory state
   };
 
   const removeItem = async (item) => {
@@ -38,7 +53,7 @@ export default function Home() {
     await updateInventory();
   };
 
-  const additem = async (item) => {
+  const addItem = async (item) => {
     const docRef = doc(collection(firestore, "inventory"), item);
     const docSnap = await getDoc(docRef);
 
@@ -46,7 +61,7 @@ export default function Home() {
       const { quantity } = docSnap.data();
       await setDoc(docRef, { quantity: quantity + 1 });
     } else {
-      await setDoc(deocRef, { quantity: 1 });
+      await setDoc(docRef, { quantity: 1 });
     }
     await updateInventory();
   };
@@ -56,13 +71,14 @@ export default function Home() {
   }, []);
 
   const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(False);
+  const handleClose = () => setOpen(false);
 
   return (
     <Box
       width="100vw"
       height="100vw"
       display="flex"
+      flexDirection="column"
       justifyContent="center"
       alignItems="center"
       gap={2}
@@ -72,10 +88,79 @@ export default function Home() {
           position="absolute"
           top="50%"
           left="50%"
-          transform="translate(-50%, -50%)"
-        ></Box>
+          width={400}
+          border="2px solid #000"
+          boxShadow={24}
+          p={4}
+          display="flex"
+          flexDirection="column"
+          gap={3}
+          sx={{ transform: "translate(-50%, -50%)" }}
+        >
+          <Typography variant="h6">Add Item</Typography>
+          <Stack width="100%" direction="row" spacing={2}>
+            <TextField
+              variant="outlined"
+              fullWidth
+              value={itemName}
+              onChange={(e) => setItemName(e.target.value)}
+            />
+            <Button
+              variant="outlined"
+              onClick={() => {
+                addItem(itemName);
+                setItemName("");
+                handleClose();
+              }}
+            >
+              Add Item
+            </Button>
+          </Stack>
+        </Box>
       </Modal>
-      <Typography variant="h1">Inventory Management</Typography>
+
+      <Button variant="contained" onClick={handleOpen}>
+        Add New Item
+      </Button>
+
+      <Box border="1px solid #333">
+        <Box
+          width="800px"
+          height="100px"
+          bgcolor="#ADD8E6"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+        >
+          <Typography variant="h2" color="#333">
+            Inventory Items
+          </Typography>
+        </Box>
+        <Stack width="800px" height="300px" spacing={2} overflow="auto">
+          {inventory.map(({ name, quantity }) => (
+            <Box
+              key={name}
+              width="100%"
+              minHeight="150px"
+              display="flex"
+              alignItems="center"
+              justifyContent="space-between"
+              bgcolor="#f0f0f0"
+              padding={5}
+            >
+              <Typography variant="h3" color="#333" textAlign="center">
+                {name.charAt(0).toUpperCase() + name.slice(1)}
+              </Typography>
+              <Typography variant="h3" color="#333" textAlign="center">
+                {quantity}
+              </Typography>
+              <Button variant="contained" onClick={() => removeItem(name)}>
+                Remove
+              </Button>
+            </Box>
+          ))}
+        </Stack>
+      </Box>
     </Box>
   );
 }
