@@ -48,6 +48,7 @@ const InventoryItem = ({
   onRemove,
   onIncrease,
   onDelete,
+  selectedExp,
 }) => (
   <Paper
     key={name}
@@ -68,6 +69,9 @@ const InventoryItem = ({
       </Typography>
       <Typography variant="body2" style={{ color: sColors.textSecondary }}>
         {description}
+      </Typography>
+      <Typography variant="body2" style={{ color: sColors.textSecondary }}>
+        Expiry: {selectedExp}
       </Typography>
     </Stack>
     <Stack direction="row" alignItems="center" spacing={1}>
@@ -109,8 +113,7 @@ export default function Home() {
   const [itemDescription, setItemDescription] = useState("");
   const [quantity, setQuantity] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [itemExpoeration, setItemExpoeration] = useState("");
-  const [selectedDate, setSelectedDate] = useState(dayjs());
+  const [selectedExp, setSelectedExp] = useState(dayjs());
 
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, "inventory"));
@@ -130,25 +133,37 @@ export default function Home() {
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
-      const { quantity, description } = docSnap.data();
+      const { quantity, description, selectedExp } = docSnap.data();
       if (quantity === 1) {
         await deleteDoc(docRef);
       } else {
-        await setDoc(docRef, { quantity: quantity - 1, description });
+        await setDoc(docRef, {
+          quantity: quantity - 1,
+          description,
+          selectedExp,
+        });
       }
     }
 
     await updateInventory();
   };
 
-  const addItem = async (item, description, quantity) => {
+  const addItem = async (item, description, quantity, selectedExp) => {
     const docRef = doc(collection(firestore, "inventory"), item);
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
-      await setDoc(docRef, { quantity: Number(quantity), description });
+      await setDoc(docRef, {
+        quantity: Number(quantity),
+        description,
+        selectedExp: selectedExp.format("YYYY-MM-DD"),
+      });
     } else {
-      await setDoc(docRef, { quantity: Number(quantity), description });
+      await setDoc(docRef, {
+        quantity: Number(quantity),
+        description,
+        selectedExp: selectedExp.format("YYYY-MM-DD"),
+      });
     }
     await updateInventory();
   };
@@ -158,8 +173,12 @@ export default function Home() {
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
-      const { quantity, description } = docSnap.data();
-      await setDoc(docRef, { quantity: quantity + 1, description });
+      const { quantity, description, selectedExp } = docSnap.data();
+      await setDoc(docRef, {
+        quantity: quantity + 1,
+        description,
+        selectedExp,
+      });
     }
     await updateInventory();
   };
@@ -285,9 +304,9 @@ export default function Home() {
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <DatePicker
                     label="Select Date"
-                    value={selectedDate}
+                    value={selectedExp}
                     onChange={(newValue) => {
-                      setSelectedDate(newValue ? newValue : null);
+                      setSelectedExp(newValue ? newValue : null);
                     }}
                     slots={{
                       textField: (params) => (
@@ -320,10 +339,11 @@ export default function Home() {
                     color: sColors.textPrimary,
                   }}
                   onClick={() => {
-                    addItem(itemName, itemDescription, quantity);
+                    addItem(itemName, itemDescription, quantity, selectedExp);
                     setItemName("");
                     setItemDescription("");
                     setQuantity("");
+                    setSelectedExp(dayjs());
                     handleClose();
                   }}
                   aria-label="Add Item"
@@ -362,12 +382,13 @@ export default function Home() {
                       .toLowerCase()
                       .includes(searchQuery.toLowerCase())
                 )
-                .map(({ name, quantity, description }) => (
+                .map(({ name, quantity, description, selectedExp }) => (
                   <InventoryItem
                     key={name}
                     name={name}
                     quantity={quantity}
                     description={description}
+                    selectedExp={selectedExp}
                     onRemove={removeItem}
                     onDelete={deleteItem}
                     onIncrease={increaseItem}
