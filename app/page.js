@@ -5,8 +5,7 @@ import { firestore } from "@/firebase";
 //calendar stuff
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'; // Import AdapterDayjs
-
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"; // Import AdapterDayjs
 
 import {
   Box,
@@ -287,14 +286,33 @@ export default function Home() {
                   <DatePicker
                     label="Select Date"
                     value={selectedDate}
-                    onChange={(newValue) => setSelectedDate(newValue)}
-                    renderInput={(params) => <TextField {...params} />}
-                    style={{
-                      backgroundColor: sColors.primary,
-                      color: sColors.textPrimary,
+                    onChange={(newValue) => {
+                      setSelectedDate(newValue ? newValue : null);
+                    }}
+                    slots={{
+                      textField: (params) => (
+                        <TextField
+                          {...params}
+                          sx={{
+                            "& .MuiInputBase-input": {
+                              color: sColors.textPrimary, // Text color
+                            },
+                            "& .MuiFormLabel-root": {
+                              color: sColors.textSecondary, // Label color
+                            },
+                            "& .MuiFormLabel-root.Mui-focused": {
+                              color: sColors.primary, // Focused label color
+                            },
+                            "& .MuiInputAdornment-root .MuiSvgIcon-root": {
+                              color: sColors.textSecondary, // Icon color
+                            },
+                          }}
+                        />
+                      ),
                     }}
                   />
                 </LocalizationProvider>
+
                 <Button
                   variant="contained"
                   style={{
