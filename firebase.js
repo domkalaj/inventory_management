@@ -1,5 +1,15 @@
 import { initializeApp, getApps } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import {
+  getFirestore,
+  collection,
+  query,
+  getDocs,
+  doc,
+  getDoc,
+  setDoc,
+  deleteDoc,
+} from "firebase/firestore";
+import { getAnalytics, isSupported } from "firebase/analytics";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAuA50IAOHumiKwBMzZ0VF6kxBAULOHr_s",
@@ -12,28 +22,19 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let firebase_app =
+const firebaseApp =
   getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
 // Initialize Firestore
-export const firestore = getFirestore(firebase_app);
+export const firestore = getFirestore(firebaseApp);
 
 // Initialize Analytics (only on client-side)
-export const initializeAnalytics = () => {
-  if (typeof window !== "undefined") {
-    const { getAnalytics } = require("firebase/analytics");
-    return getAnalytics(firebase_app);
+export const initializeAnalytics = async () => {
+  if (typeof window !== "undefined" && (await isSupported())) {
+    return getAnalytics(firebaseApp);
   }
   return null;
 };
 
 // Export Firestore functions
-export {
-  collection,
-  query,
-  getDocs,
-  doc,
-  getDoc,
-  setDoc,
-  deleteDoc,
-} from "firebase/firestore";
+export { collection, query, getDocs, doc, getDoc, setDoc, deleteDoc };
