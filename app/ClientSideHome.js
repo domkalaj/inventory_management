@@ -414,8 +414,10 @@ export default function ClientSideHome() {
       </Modal>
       <Stack spacing={2} marginY={2}>
         {sortInventory(
-          inventory.filter((item) =>
-            item.name.toLowerCase().includes(searchQuery.toLowerCase())
+          inventory.filter(
+            (item) =>
+              item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              item.description.toLowerCase().includes(searchQuery.toLowerCase())
           )
         ).map((item) => (
           <InventoryItem
