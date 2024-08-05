@@ -32,13 +32,14 @@ import {
   query,
   getDocs,
 } from "firebase/firestore";
+import Image from "next/image"; // Import next/image
 
 const sColors = {
-  background: "#121212", //dark gray
-  primary: "#1DB954", //green
-  textPrimary: "#FFFFFF", //white
-  textSecondary: "#B3B3B3", //light fray
-  cardBackground: "#181818", //dark gray
+  background: "#121212", // dark gray
+  primary: "#1DB954", // green
+  textPrimary: "#FFFFFF", // white
+  textSecondary: "#B3B3B3", // light gray
+  cardBackground: "#181818", // dark gray
 };
 
 const InventoryItem = ({
@@ -95,21 +96,13 @@ const InventoryItem = ({
         style={{ color: sColors.primary }}
         onClick={() => onDelete(name)}
       >
-        <img
-          src="/garbage.svg"
-          alt="Delete"
-          style={{ width: "24px", height: "24px" }}
-        />
+        <Image src="/garbage.svg" alt="Delete" width={24} height={24} />
       </IconButton>
       <IconButton
         style={{ color: sColors.primary }}
         onClick={() => onEdit(name, description, quantity, selectedExp)}
       >
-        <img
-          src="../edit.svg"
-          alt="Edit"
-          style={{ width: "24px", height: "24px" }}
-        />
+        <Image src="/edit.svg" alt="Edit" width={24} height={24} />
       </IconButton>
     </Stack>
   </Paper>
@@ -239,23 +232,22 @@ export default function Home() {
     setSortOption(event.target.value);
   };
 
-const sortInventory = (items) => {
-  switch (sortOption) {
-    case "name":
-      return items.sort((a, b) => a.name.localeCompare(b.name));
-    case "quantity":
-      return items.sort((a, b) => b.quantity - a.quantity);
-    case "expiry":
-      return items.sort((a, b) =>
-        dayjs(a.selectedExp).isAfter(dayjs(b.selectedExp)) ? 1 : -1
-      );
-    case "description": // New case for sorting by description
-      return items.sort((a, b) => a.description.localeCompare(b.description));
-    default:
-      return items;
-  }
-};
-
+  const sortInventory = (items) => {
+    switch (sortOption) {
+      case "name":
+        return items.sort((a, b) => a.name.localeCompare(b.name));
+      case "quantity":
+        return items.sort((a, b) => b.quantity - a.quantity);
+      case "expiry":
+        return items.sort((a, b) =>
+          dayjs(a.selectedExp).isAfter(dayjs(b.selectedExp)) ? 1 : -1
+        );
+      case "description": // New case for sorting by description
+        return items.sort((a, b) => a.description.localeCompare(b.description));
+      default:
+        return items;
+    }
+  };
 
   return (
     <Box
@@ -309,287 +301,154 @@ const sortInventory = (items) => {
             >
               <MenuItem value="name">Name</MenuItem>
               <MenuItem value="quantity">Quantity</MenuItem>
-              <MenuItem value="expiry">Expiration</MenuItem>
+              <MenuItem value="expiry">Expiry</MenuItem>
+              <MenuItem value="description">Description</MenuItem>
             </Select>
           </FormControl>
           <Button
             variant="contained"
             onClick={handleOpen}
-            sx={{
+            style={{
               backgroundColor: sColors.primary,
               color: sColors.textPrimary,
-              padding: "px 15px",
             }}
           >
             Add Item
           </Button>
         </Box>
-
-        {sortInventory(
-          inventory.filter(
-            (item) =>
-              item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              item.description.toLowerCase().includes(searchQuery.toLowerCase())
-          )
-        ).map((item) => (
-          <InventoryItem
-            key={item.name}
-            {...item}
-            onRemove={removeItem}
-            onIncrease={increaseItem}
-            onDelete={deleteItem}
-            onEdit={handleEditItem}
-          />
-        ))}
-
-        <Stack
-          direction="row"
-          justifyContent="flex-end"
-          spacing={2}
-          marginTop={2}
-        ></Stack>
-
         <Modal open={open} onClose={handleClose}>
-          <Box
-            position="absolute"
-            top="50%"
-            left="50%"
-            transform="translate(-50%, -50%)"
-            width={isSmallScreen ? "90%" : "400px"}
-            bgcolor={sColors.cardBackground}
-            boxShadow={24}
-            p={4}
-            borderRadius="8px"
+          <Paper
+            style={{
+              width: isSmallScreen ? "80%" : "50%",
+              margin: "auto",
+              marginTop: "10%",
+              padding: "20px",
+            }}
           >
-            <Typography
-              variant="h6"
-              component="h2"
-              style={{ color: sColors.textPrimary }}
-            >
+            <Typography variant="h6" style={{ marginBottom: "16px" }}>
               Add New Item
             </Typography>
-            <Stack spacing={2} marginTop={2}>
+            <Stack spacing={2}>
               <TextField
+                fullWidth
                 label="Item Name"
                 variant="outlined"
                 value={itemName}
                 onChange={(e) => setItemName(e.target.value)}
-                fullWidth
-                InputProps={{
-                  sx: {
-                    backgroundColor: sColors.cardBackground,
-                    color: sColors.textPrimary,
-                  },
-                }}
-                InputLabelProps={{
-                  style: { color: sColors.textSecondary },
-                }}
               />
               <TextField
+                fullWidth
                 label="Description"
                 variant="outlined"
                 value={itemDescription}
                 onChange={(e) => setItemDescription(e.target.value)}
-                fullWidth
-                InputProps={{
-                  sx: {
-                    backgroundColor: sColors.cardBackground,
-                    color: sColors.textPrimary,
-                  },
-                }}
-                InputLabelProps={{
-                  style: { color: sColors.textSecondary },
-                }}
               />
               <TextField
+                fullWidth
                 label="Quantity"
                 variant="outlined"
+                type="number"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                type="number"
-                fullWidth
-                InputProps={{
-                  sx: {
-                    backgroundColor: sColors.cardBackground,
-                    color: sColors.textPrimary,
-                  },
-                }}
-                InputLabelProps={{
-                  style: { color: sColors.textSecondary },
-                }}
-              />
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DatePicker
-                  label="Select Date"
-                  value={selectedExp}
-                  onChange={(newValue) => {
-                    setSelectedExp(newValue ? newValue : null);
-                  }}
-                  slots={{
-                    textField: (params) => (
-                      <TextField
-                        {...params}
-                        sx={{
-                          "& .MuiInputBase-input": {
-                            color: sColors.textPrimary, // Text color
-                          },
-                          "& .MuiFormLabel-root": {
-                            color: sColors.textSecondary, // Label color
-                          },
-                          "& .MuiFormLabel-root.Mui-focused": {
-                            color: sColors.primary, // Focused label color
-                          },
-                          "& .MuiInputAdornment-root .MuiSvgIcon-root": {
-                            color: sColors.textSecondary, // Icon color
-                          },
-                        }}
-                      />
-                    ),
-                  }}
-                />
-              </LocalizationProvider>
-              <Stack direction="row" spacing={2} justifyContent="flex-end">
-                <Button
-                  onClick={handleClose}
-                  style={{
-                    backgroundColor: sColors.primary,
-                    color: sColors.textPrimary,
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => {
-                    addItem(itemName, itemDescription, quantity, selectedExp);
-                    handleClose();
-                  }}
-                  style={{
-                    backgroundColor: sColors.primary,
-                    color: sColors.textPrimary,
-                  }}
-                >
-                  Add
-                </Button>
-              </Stack>
-            </Stack>
-          </Box>
-        </Modal>
-
-        <Modal open={editOpen} onClose={() => setEditOpen(false)}>
-          <Box
-            position="absolute"
-            top="50%"
-            left="50%"
-            transform="translate(-50%, -50%)"
-            width={isSmallScreen ? "90%" : "400px"}
-            bgcolor={sColors.cardBackground}
-            boxShadow={24}
-            p={4}
-            borderRadius="8px"
-          >
-            <Typography
-              variant="h6"
-              component="h2"
-              style={{ color: sColors.textPrimary }}
-            >
-              Edit Item
-            </Typography>
-            <Stack spacing={2} marginTop={2}>
-              <TextField
-                label="Item Name"
-                variant="outlined"
-                value={itemName}
-                onChange={(e) => setItemName(e.target.value)}
-                fullWidth
-                InputProps={{
-                  sx: {
-                    backgroundColor: sColors.cardBackground,
-                    color: sColors.textPrimary,
-                  },
-                }}
-                InputLabelProps={{
-                  style: { color: sColors.textSecondary },
-                }}
-              />
-              <TextField
-                label="Description"
-                variant="outlined"
-                value={itemDescription}
-                onChange={(e) => setItemDescription(e.target.value)}
-                fullWidth
-                InputProps={{
-                  sx: {
-                    backgroundColor: sColors.cardBackground,
-                    color: sColors.textPrimary,
-                  },
-                }}
-                InputLabelProps={{
-                  style: { color: sColors.textSecondary },
-                }}
-              />
-              <TextField
-                label="Quantity"
-                variant="outlined"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                type="number"
-                fullWidth
-                InputProps={{
-                  sx: {
-                    backgroundColor: sColors.cardBackground,
-                    color: sColors.textPrimary,
-                  },
-                }}
-                InputLabelProps={{
-                  style: { color: sColors.textSecondary },
-                }}
               />
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
                   label="Expiry Date"
                   value={selectedExp}
                   onChange={(newValue) => setSelectedExp(newValue)}
-                  inputFormat="MM/DD/YYYY"
                   renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      fullWidth
-                      InputProps={{
-                        sx: {
-                          backgroundColor: sColors.cardBackground,
-                          color: sColors.textPrimary,
-                        },
-                      }}
-                      InputLabelProps={{
-                        style: { color: sColors.textSecondary },
-                      }}
-                    />
+                    <TextField {...params} fullWidth variant="outlined" />
                   )}
                 />
               </LocalizationProvider>
-              <Stack direction="row" spacing={2} justifyContent="flex-end">
-                <Button
-                  onClick={() => setEditOpen(false)}
-                  style={{
-                    backgroundColor: sColors.primary,
-                    color: sColors.textPrimary,
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleUpdateItem}
-                  style={{
-                    backgroundColor: sColors.primary,
-                    color: sColors.textPrimary,
-                  }}
-                >
-                  Update
-                </Button>
-              </Stack>
+              <Button
+                variant="contained"
+                onClick={() => {
+                  addItem(itemName, itemDescription, quantity, selectedExp);
+                  setOpen(false);
+                }}
+                style={{ backgroundColor: sColors.primary }}
+              >
+                Add Item
+              </Button>
             </Stack>
-          </Box>
+          </Paper>
         </Modal>
+        <Modal open={editOpen} onClose={() => setEditOpen(false)}>
+          <Paper
+            style={{
+              width: isSmallScreen ? "80%" : "50%",
+              margin: "auto",
+              marginTop: "10%",
+              padding: "20px",
+            }}
+          >
+            <Typography variant="h6" style={{ marginBottom: "16px" }}>
+              Edit Item
+            </Typography>
+            <Stack spacing={2}>
+              <TextField
+                fullWidth
+                label="Item Name"
+                variant="outlined"
+                value={itemName}
+                onChange={(e) => setItemName(e.target.value)}
+                disabled
+              />
+              <TextField
+                fullWidth
+                label="Description"
+                variant="outlined"
+                value={itemDescription}
+                onChange={(e) => setItemDescription(e.target.value)}
+              />
+              <TextField
+                fullWidth
+                label="Quantity"
+                variant="outlined"
+                type="number"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+              />
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  label="Expiry Date"
+                  value={selectedExp}
+                  onChange={(newValue) => setSelectedExp(newValue)}
+                  renderInput={(params) => (
+                    <TextField {...params} fullWidth variant="outlined" />
+                  )}
+                />
+              </LocalizationProvider>
+              <Button
+                variant="contained"
+                onClick={handleUpdateItem}
+                style={{ backgroundColor: sColors.primary }}
+              >
+                Update Item
+              </Button>
+            </Stack>
+          </Paper>
+        </Modal>
+        <Stack spacing={2} marginY={2}>
+          {sortInventory(
+            inventory.filter((item) =>
+              item.name.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+          ).map((item) => (
+            <InventoryItem
+              key={item.name}
+              name={item.name}
+              quantity={item.quantity}
+              description={item.description}
+              selectedExp={item.selectedExp}
+              onRemove={removeItem}
+              onIncrease={increaseItem}
+              onDelete={deleteItem}
+              onEdit={handleEditItem}
+            />
+          ))}
+        </Stack>
       </Container>
     </Box>
   );
