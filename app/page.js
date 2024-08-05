@@ -291,165 +291,188 @@ export default function Home() {
             margin="normal"
             sx={{ flexGrow: 1, marginRight: 1 }}
           >
-            <InputLabel sx={{ color: sColors.textSecondary }}>
-              Sort By
+            <InputLabel id="sort-label" style={{ color: sColors.textPrimary }}>
+              Sort by
             </InputLabel>
             <Select
+              labelId="sort-label"
               value={sortOption}
               onChange={handleSortChange}
-              sx={{ color: sColors.textPrimary }}
+              sx={{
+                backgroundColor: sColors.cardBackground,
+                color: sColors.textPrimary,
+              }}
             >
               <MenuItem value="name">Name</MenuItem>
               <MenuItem value="quantity">Quantity</MenuItem>
-              <MenuItem value="expiry">Expiry</MenuItem>
+              <MenuItem value="expiry">Expiry Date</MenuItem>
               <MenuItem value="description">Description</MenuItem>
             </Select>
           </FormControl>
           <Button
             variant="contained"
-            onClick={handleOpen}
             style={{
+              margin: "10px",
               backgroundColor: sColors.primary,
               color: sColors.textPrimary,
             }}
+            onClick={handleOpen}
           >
             Add Item
           </Button>
         </Box>
         <Modal open={open} onClose={handleClose}>
-          <Paper
-            style={{
-              width: isSmallScreen ? "80%" : "50%",
-              margin: "auto",
-              marginTop: "10%",
-              padding: "20px",
-            }}
+          <Box
+            position="absolute"
+            top="50%"
+            left="50%"
+            transform="translate(-50%, -50%)"
+            width={isSmallScreen ? "90vw" : "400px"}
+            bgcolor={sColors.cardBackground}
+            p={3}
+            borderRadius={3}
+            boxShadow={3}
           >
-            <Typography variant="h6" style={{ marginBottom: "16px" }}>
+            <Typography variant="h6" gutterBottom>
               Add New Item
             </Typography>
-            <Stack spacing={2}>
-              <TextField
-                fullWidth
-                label="Item Name"
-                variant="outlined"
-                value={itemName}
-                onChange={(e) => setItemName(e.target.value)}
+            <TextField
+              label="Item Name"
+              fullWidth
+              value={itemName}
+              onChange={(e) => setItemName(e.target.value)}
+              sx={{ mb: 2, backgroundColor: sColors.textPrimary }}
+            />
+            <TextField
+              label="Item Description"
+              fullWidth
+              value={itemDescription}
+              onChange={(e) => setItemDescription(e.target.value)}
+              sx={{ mb: 2, backgroundColor: sColors.textPrimary }}
+            />
+            <TextField
+              label="Quantity"
+              type="number"
+              fullWidth
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              sx={{ mb: 2, backgroundColor: sColors.textPrimary }}
+            />
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DatePicker
+                label="Expiry Date"
+                value={selectedExp}
+                onChange={(newValue) => setSelectedExp(newValue)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    fullWidth
+                    sx={{ mb: 2, backgroundColor: sColors.textPrimary }}
+                  />
+                )}
               />
-              <TextField
-                fullWidth
-                label="Description"
-                variant="outlined"
-                value={itemDescription}
-                onChange={(e) => setItemDescription(e.target.value)}
-              />
-              <TextField
-                fullWidth
-                label="Quantity"
-                variant="outlined"
-                type="number"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-              />
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DatePicker
-                  label="Expiry Date"
-                  value={selectedExp}
-                  onChange={(newValue) => setSelectedExp(newValue)}
-                  renderInput={(params) => (
-                    <TextField {...params} fullWidth variant="outlined" />
-                  )}
-                />
-              </LocalizationProvider>
-
-              <Button
-                variant="contained"
-                onClick={() => {
-                  addItem(itemName, itemDescription, quantity, selectedExp);
-                  setOpen(false);
-                }}
-                style={{ backgroundColor: sColors.primary }}
-              >
-                Add Item
-              </Button>
-            </Stack>
-          </Paper>
+            </LocalizationProvider>
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={() => {
+                addItem(itemName, itemDescription, quantity, selectedExp);
+                setOpen(false);
+              }}
+              style={{
+                backgroundColor: sColors.primary,
+                color: sColors.textPrimary,
+              }}
+            >
+              Add Item
+            </Button>
+          </Box>
         </Modal>
+
         <Modal open={editOpen} onClose={() => setEditOpen(false)}>
-          <Paper
-            style={{
-              width: isSmallScreen ? "80%" : "50%",
-              margin: "auto",
-              marginTop: "10%",
-              padding: "20px",
-            }}
+          <Box
+            position="absolute"
+            top="50%"
+            left="50%"
+            transform="translate(-50%, -50%)"
+            width={isSmallScreen ? "90vw" : "400px"}
+            bgcolor={sColors.cardBackground}
+            p={3}
+            borderRadius={3}
+            boxShadow={3}
           >
-            <Typography variant="h6" style={{ marginBottom: "16px" }}>
+            <Typography variant="h6" gutterBottom>
               Edit Item
             </Typography>
-            <Stack spacing={2}>
-              <TextField
-                fullWidth
-                label="Item Name"
-                variant="outlined"
-                value={itemName}
-                onChange={(e) => setItemName(e.target.value)}
-                disabled
+            <TextField
+              label="Item Name"
+              fullWidth
+              value={itemName}
+              onChange={(e) => setItemName(e.target.value)}
+              sx={{ mb: 2, backgroundColor: sColors.textPrimary }}
+            />
+            <TextField
+              label="Item Description"
+              fullWidth
+              value={itemDescription}
+              onChange={(e) => setItemDescription(e.target.value)}
+              sx={{ mb: 2, backgroundColor: sColors.textPrimary }}
+            />
+            <TextField
+              label="Quantity"
+              type="number"
+              fullWidth
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              sx={{ mb: 2, backgroundColor: sColors.textPrimary }}
+            />
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DatePicker
+                label="Expiry Date"
+                value={selectedExp}
+                onChange={(newValue) => setSelectedExp(newValue)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    fullWidth
+                    sx={{ mb: 2, backgroundColor: sColors.textPrimary }}
+                  />
+                )}
               />
-              <TextField
-                fullWidth
-                label="Description"
-                variant="outlined"
-                value={itemDescription}
-                onChange={(e) => setItemDescription(e.target.value)}
-              />
-              <TextField
-                fullWidth
-                label="Quantity"
-                variant="outlined"
-                type="number"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-              />
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DatePicker
-                  label="Expiry Date"
-                  value={selectedExp}
-                  onChange={(newValue) => setSelectedExp(newValue)}
-                  renderInput={(params) => (
-                    <TextField {...params} fullWidth variant="outlined" />
-                  )}
-                />
-              </LocalizationProvider>
-              <Button
-                variant="contained"
-                onClick={handleUpdateItem}
-                style={{ backgroundColor: sColors.primary }}
-              >
-                Update Item
-              </Button>
-            </Stack>
-          </Paper>
+            </LocalizationProvider>
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={handleUpdateItem}
+              style={{
+                backgroundColor: sColors.primary,
+                color: sColors.textPrimary,
+              }}
+            >
+              Update Item
+            </Button>
+          </Box>
         </Modal>
-        <Stack spacing={2} marginY={2}>
-          {sortInventory(
-            inventory.filter((item) =>
+
+        <Box mt={2}>
+          {sortInventory(inventory)
+            .filter((item) =>
               item.name.toLowerCase().includes(searchQuery.toLowerCase())
             )
-          ).map((item) => (
-            <InventoryItem
-              key={item.name}
-              name={item.name}
-              quantity={item.quantity}
-              description={item.description}
-              selectedExp={item.selectedExp}
-              onRemove={removeItem}
-              onIncrease={increaseItem}
-              onDelete={deleteItem}
-              onEdit={handleEditItem}
-            />
-          ))}
-        </Stack>
+            .map((item) => (
+              <InventoryItem
+                key={item.name}
+                name={item.name}
+                quantity={item.quantity}
+                description={item.description}
+                selectedExp={item.selectedExp}
+                onRemove={removeItem}
+                onIncrease={increaseItem}
+                onDelete={deleteItem}
+                onEdit={handleEditItem}
+              />
+            ))}
+        </Box>
       </Container>
     </Box>
   );
