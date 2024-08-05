@@ -1,12 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
 import { firestore } from "@/firebase";
-
-//calendar stuff
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"; // Import AdapterDayjs
-
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import {
   Box,
   Modal,
@@ -21,6 +18,10 @@ import {
   AppBar,
   Toolbar,
   Container,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import {
   collection,
@@ -32,23 +33,23 @@ import {
   getDocs,
 } from "firebase/firestore";
 
-// Spotify Color inspired Palette
 const sColors = {
-  background: "#121212", //dark grey
+  background: "#121212", //dark gray
   primary: "#1DB954", //green
-  textPrimary: "#FFFFFF", //pure white
-  textSecondary: "#B3B3B3", //light grey
-  cardBackground: "#181818", //dark grey #2
+  textPrimary: "#FFFFFF", //white
+  textSecondary: "#B3B3B3", //light fray
+  cardBackground: "#181818", //dark gray
 };
 
 const InventoryItem = ({
   name,
   quantity,
   description,
+  selectedExp,
   onRemove,
   onIncrease,
   onDelete,
-  selectedExp,
+  onEdit,
 }) => (
   <Paper
     key={name}
@@ -100,6 +101,16 @@ const InventoryItem = ({
           style={{ width: "24px", height: "24px" }}
         />
       </IconButton>
+      <IconButton
+        style={{ color: sColors.primary }}
+        onClick={() => onEdit(name, description, quantity, selectedExp)}
+      >
+        <img
+          src="../edit.svg"
+          alt="Edit"
+          style={{ width: "24px", height: "24px" }}
+        />
+      </IconButton>
     </Stack>
   </Paper>
 );
@@ -109,11 +120,14 @@ export default function Home() {
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [inventory, setInventory] = useState([]);
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [itemName, setItemName] = useState("");
   const [itemDescription, setItemDescription] = useState("");
   const [quantity, setQuantity] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedExp, setSelectedExp] = useState(dayjs());
+  const [currentItem, setCurrentItem] = useState(null);
+  const [sortOption, setSortOption] = useState("name");
 
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, "inventory"));
@@ -156,13 +170,13 @@ export default function Home() {
       await setDoc(docRef, {
         quantity: Number(quantity),
         description,
-        selectedExp: selectedExp.format("YYYY-MM-DD"),
+        selectedExp: selectedExp.format("MM/DD/YYYY"),
       });
     } else {
       await setDoc(docRef, {
         quantity: Number(quantity),
         description,
-        selectedExp: selectedExp.format("YYYY-MM-DD"),
+        selectedExp: selectedExp.format("MM/DD/YYYY"),
       });
     }
     await updateInventory();
@@ -194,6 +208,26 @@ export default function Home() {
     await updateInventory();
   };
 
+  const handleEditItem = (name, description, quantity, selectedExp) => {
+    setCurrentItem({ name, description, quantity, selectedExp });
+    setItemName(name);
+    setItemDescription(description);
+    setQuantity(quantity);
+    setSelectedExp(dayjs(selectedExp));
+    setEditOpen(true);
+  };
+
+  const handleUpdateItem = async () => {
+    const { name } = currentItem;
+    await setDoc(doc(collection(firestore, "inventory"), name), {
+      quantity: Number(quantity),
+      description: itemDescription,
+      selectedExp: selectedExp.format("MM/DD/YYYY"),
+    });
+    await updateInventory();
+    setEditOpen(false);
+  };
+
   useEffect(() => {
     updateInventory();
   }, []);
@@ -201,8 +235,35 @@ export default function Home() {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
+  const handleSortChange = (event) => {
+    setSortOption(event.target.value);
+  };
+
+const sortInventory = (items) => {
+  switch (sortOption) {
+    case "name":
+      return items.sort((a, b) => a.name.localeCompare(b.name));
+    case "quantity":
+      return items.sort((a, b) => b.quantity - a.quantity);
+    case "expiry":
+      return items.sort((a, b) =>
+        dayjs(a.selectedExp).isAfter(dayjs(b.selectedExp)) ? 1 : -1
+      );
+    case "description": // New case for sorting by description
+      return items.sort((a, b) => a.description.localeCompare(b.description));
+    default:
+      return items;
+  }
+};
+
+
   return (
-    <Box width="100vw" height="100vh" bgcolor={sColors.background}>
+    <Box
+      width="100vw"
+      height="100vh"
+      bgcolor={sColors.background}
+      overflow="auto"
+    >
       <AppBar
         position="static"
         style={{ backgroundColor: sColors.cardBackground }}
@@ -222,181 +283,313 @@ export default function Home() {
           onChange={(e) => setSearchQuery(e.target.value)}
           aria-label="Search Items"
           InputProps={{
-            style: { backgroundColor: "white" },
+            sx: {
+              margin: "10px",
+              backgroundColor: sColors.textPrimary,
+              color: sColors.background,
+            },
+          }}
+          InputLabelProps={{
+            style: { color: sColors.textSecondary },
           }}
         />
-
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          flexDirection="column"
-          mt={5}
-          gap={2}
-        >
+        <Box display="flex" alignItems="center">
+          <FormControl
+            fullWidth
+            margin="normal"
+            sx={{ flexGrow: 1, marginRight: 1 }}
+          >
+            <InputLabel sx={{ color: sColors.textSecondary }}>
+              Sort By
+            </InputLabel>
+            <Select
+              value={sortOption}
+              onChange={handleSortChange}
+              sx={{ color: sColors.textPrimary }}
+            >
+              <MenuItem value="name">Name</MenuItem>
+              <MenuItem value="quantity">Quantity</MenuItem>
+              <MenuItem value="expiry">Expiration</MenuItem>
+            </Select>
+          </FormControl>
           <Button
             variant="contained"
-            style={{
+            onClick={handleOpen}
+            sx={{
               backgroundColor: sColors.primary,
               color: sColors.textPrimary,
+              padding: "px 15px",
             }}
-            onClick={handleOpen}
           >
-            Add New Item
+            Add Item
           </Button>
+        </Box>
 
-          <Modal open={open} onClose={handleClose}>
-            <Box
-              position="absolute"
-              top="50%"
-              left="50%"
-              width={isSmallScreen ? "80%" : 400}
-              boxShadow={24}
-              p={4}
-              display="flex"
-              flexDirection="column"
-              gap={3}
-              sx={{ transform: "translate(-50%, -50%)" }}
-              bgcolor="background.paper"
-              borderRadius={1}
-              style={{ backgroundColor: sColors.cardBackground }}
+        {sortInventory(
+          inventory.filter(
+            (item) =>
+              item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              item.description.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+        ).map((item) => (
+          <InventoryItem
+            key={item.name}
+            {...item}
+            onRemove={removeItem}
+            onIncrease={increaseItem}
+            onDelete={deleteItem}
+            onEdit={handleEditItem}
+          />
+        ))}
+
+        <Stack
+          direction="row"
+          justifyContent="flex-end"
+          spacing={2}
+          marginTop={2}
+        ></Stack>
+
+        <Modal open={open} onClose={handleClose}>
+          <Box
+            position="absolute"
+            top="50%"
+            left="50%"
+            transform="translate(-50%, -50%)"
+            width={isSmallScreen ? "90%" : "400px"}
+            bgcolor={sColors.cardBackground}
+            boxShadow={24}
+            p={4}
+            borderRadius="8px"
+          >
+            <Typography
+              variant="h6"
+              component="h2"
+              style={{ color: sColors.textPrimary }}
             >
-              <Typography variant="h6" style={{ color: sColors.textPrimary }}>
-                Add Item
-              </Typography>
-              <Stack direction="column" spacing={2}>
-                <TextField
-                  variant="outlined"
-                  fullWidth
-                  value={itemName}
-                  onChange={(e) => setItemName(e.target.value)}
-                  aria-label="Item Name"
-                  label="Item Name"
-                  InputLabelProps={{
-                    style: { color: sColors.textSecondary },
+              Add New Item
+            </Typography>
+            <Stack spacing={2} marginTop={2}>
+              <TextField
+                label="Item Name"
+                variant="outlined"
+                value={itemName}
+                onChange={(e) => setItemName(e.target.value)}
+                fullWidth
+                InputProps={{
+                  sx: {
+                    backgroundColor: sColors.cardBackground,
+                    color: sColors.textPrimary,
+                  },
+                }}
+                InputLabelProps={{
+                  style: { color: sColors.textSecondary },
+                }}
+              />
+              <TextField
+                label="Description"
+                variant="outlined"
+                value={itemDescription}
+                onChange={(e) => setItemDescription(e.target.value)}
+                fullWidth
+                InputProps={{
+                  sx: {
+                    backgroundColor: sColors.cardBackground,
+                    color: sColors.textPrimary,
+                  },
+                }}
+                InputLabelProps={{
+                  style: { color: sColors.textSecondary },
+                }}
+              />
+              <TextField
+                label="Quantity"
+                variant="outlined"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                type="number"
+                fullWidth
+                InputProps={{
+                  sx: {
+                    backgroundColor: sColors.cardBackground,
+                    color: sColors.textPrimary,
+                  },
+                }}
+                InputLabelProps={{
+                  style: { color: sColors.textSecondary },
+                }}
+              />
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  label="Select Date"
+                  value={selectedExp}
+                  onChange={(newValue) => {
+                    setSelectedExp(newValue ? newValue : null);
                   }}
-                  InputProps={{ style: { color: sColors.textPrimary } }}
-                />
-                <TextField
-                  variant="outlined"
-                  fullWidth
-                  value={itemDescription}
-                  onChange={(e) => setItemDescription(e.target.value)}
-                  aria-label="Item Description"
-                  label="Item Description"
-                  InputLabelProps={{
-                    style: { color: sColors.textSecondary },
+                  slots={{
+                    textField: (params) => (
+                      <TextField
+                        {...params}
+                        sx={{
+                          "& .MuiInputBase-input": {
+                            color: sColors.textPrimary, // Text color
+                          },
+                          "& .MuiFormLabel-root": {
+                            color: sColors.textSecondary, // Label color
+                          },
+                          "& .MuiFormLabel-root.Mui-focused": {
+                            color: sColors.primary, // Focused label color
+                          },
+                          "& .MuiInputAdornment-root .MuiSvgIcon-root": {
+                            color: sColors.textSecondary, // Icon color
+                          },
+                        }}
+                      />
+                    ),
                   }}
-                  InputProps={{ style: { color: sColors.textPrimary } }}
                 />
-                <TextField
-                  variant="outlined"
-                  fullWidth
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  aria-label="Item Quantity"
-                  label="Item Quantity"
-                  InputLabelProps={{
-                    style: { color: sColors.textSecondary },
-                  }}
-                  InputProps={{ style: { color: sColors.textPrimary } }}
-                />
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DatePicker
-                    label="Select Date"
-                    value={selectedExp}
-                    onChange={(newValue) => {
-                      setSelectedExp(newValue ? newValue : null);
-                    }}
-                    slots={{
-                      textField: (params) => (
-                        <TextField
-                          {...params}
-                          sx={{
-                            "& .MuiInputBase-input": {
-                              color: sColors.textPrimary, // Text color
-                            },
-                            "& .MuiFormLabel-root": {
-                              color: sColors.textSecondary, // Label color
-                            },
-                            "& .MuiFormLabel-root.Mui-focused": {
-                              color: sColors.primary, // Focused label color
-                            },
-                            "& .MuiInputAdornment-root .MuiSvgIcon-root": {
-                              color: sColors.textSecondary, // Icon color
-                            },
-                          }}
-                        />
-                      ),
-                    }}
-                  />
-                </LocalizationProvider>
-
+              </LocalizationProvider>
+              <Stack direction="row" spacing={2} justifyContent="flex-end">
                 <Button
-                  variant="contained"
+                  onClick={handleClose}
                   style={{
                     backgroundColor: sColors.primary,
                     color: sColors.textPrimary,
                   }}
+                >
+                  Cancel
+                </Button>
+                <Button
                   onClick={() => {
                     addItem(itemName, itemDescription, quantity, selectedExp);
-                    setItemName("");
-                    setItemDescription("");
-                    setQuantity("");
-                    setSelectedExp(dayjs());
                     handleClose();
                   }}
-                  aria-label="Add Item"
+                  style={{
+                    backgroundColor: sColors.primary,
+                    color: sColors.textPrimary,
+                  }}
                 >
-                  Add Item
+                  Add
                 </Button>
               </Stack>
-            </Box>
-          </Modal>
-
-          <Box
-            width={isSmallScreen ? "90%" : "800px"}
-            borderRadius={1}
-            boxShadow={3}
-            bgcolor={sColors.cardBackground}
-            padding={3}
-            mt={3}
-          >
-            <Typography variant="h5" style={{ color: sColors.textPrimary }}>
-              Inventory Items
-            </Typography>
-            <Stack
-              width="100%"
-              height="300px"
-              spacing={2}
-              overflow="auto"
-              padding={2}
-            >
-              {inventory
-                .filter(
-                  (item) =>
-                    item.name
-                      .toLowerCase()
-                      .includes(searchQuery.toLowerCase()) ||
-                    item.description
-                      .toLowerCase()
-                      .includes(searchQuery.toLowerCase())
-                )
-                .map(({ name, quantity, description, selectedExp }) => (
-                  <InventoryItem
-                    key={name}
-                    name={name}
-                    quantity={quantity}
-                    description={description}
-                    selectedExp={selectedExp}
-                    onRemove={removeItem}
-                    onDelete={deleteItem}
-                    onIncrease={increaseItem}
-                  />
-                ))}
             </Stack>
           </Box>
-        </Box>
+        </Modal>
+
+        <Modal open={editOpen} onClose={() => setEditOpen(false)}>
+          <Box
+            position="absolute"
+            top="50%"
+            left="50%"
+            transform="translate(-50%, -50%)"
+            width={isSmallScreen ? "90%" : "400px"}
+            bgcolor={sColors.cardBackground}
+            boxShadow={24}
+            p={4}
+            borderRadius="8px"
+          >
+            <Typography
+              variant="h6"
+              component="h2"
+              style={{ color: sColors.textPrimary }}
+            >
+              Edit Item
+            </Typography>
+            <Stack spacing={2} marginTop={2}>
+              <TextField
+                label="Item Name"
+                variant="outlined"
+                value={itemName}
+                onChange={(e) => setItemName(e.target.value)}
+                fullWidth
+                InputProps={{
+                  sx: {
+                    backgroundColor: sColors.cardBackground,
+                    color: sColors.textPrimary,
+                  },
+                }}
+                InputLabelProps={{
+                  style: { color: sColors.textSecondary },
+                }}
+              />
+              <TextField
+                label="Description"
+                variant="outlined"
+                value={itemDescription}
+                onChange={(e) => setItemDescription(e.target.value)}
+                fullWidth
+                InputProps={{
+                  sx: {
+                    backgroundColor: sColors.cardBackground,
+                    color: sColors.textPrimary,
+                  },
+                }}
+                InputLabelProps={{
+                  style: { color: sColors.textSecondary },
+                }}
+              />
+              <TextField
+                label="Quantity"
+                variant="outlined"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                type="number"
+                fullWidth
+                InputProps={{
+                  sx: {
+                    backgroundColor: sColors.cardBackground,
+                    color: sColors.textPrimary,
+                  },
+                }}
+                InputLabelProps={{
+                  style: { color: sColors.textSecondary },
+                }}
+              />
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  label="Expiry Date"
+                  value={selectedExp}
+                  onChange={(newValue) => setSelectedExp(newValue)}
+                  inputFormat="MM/DD/YYYY"
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      fullWidth
+                      InputProps={{
+                        sx: {
+                          backgroundColor: sColors.cardBackground,
+                          color: sColors.textPrimary,
+                        },
+                      }}
+                      InputLabelProps={{
+                        style: { color: sColors.textSecondary },
+                      }}
+                    />
+                  )}
+                />
+              </LocalizationProvider>
+              <Stack direction="row" spacing={2} justifyContent="flex-end">
+                <Button
+                  onClick={() => setEditOpen(false)}
+                  style={{
+                    backgroundColor: sColors.primary,
+                    color: sColors.textPrimary,
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleUpdateItem}
+                  style={{
+                    backgroundColor: sColors.primary,
+                    color: sColors.textPrimary,
+                  }}
+                >
+                  Update
+                </Button>
+              </Stack>
+            </Stack>
+          </Box>
+        </Modal>
       </Container>
     </Box>
   );
