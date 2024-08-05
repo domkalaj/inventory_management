@@ -96,13 +96,13 @@ const InventoryItem = ({
         style={{ color: sColors.primary }}
         onClick={() => onDelete(name)}
       >
-        <Image src="/garbage.svg" alt="Delete" width={24} height={24} />
+        <Image src="garbage.svg" alt="Delete" width={24} height={24} />
       </IconButton>
       <IconButton
         style={{ color: sColors.primary }}
         onClick={() => onEdit(name, description, quantity, selectedExp)}
       >
-        <Image src="/edit.svg" alt="Edit" width={24} height={24} />
+        <Image src="edit.svg" alt="Edit" width={24} height={24} />
       </IconButton>
     </Stack>
   </Paper>
